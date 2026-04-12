@@ -49,7 +49,8 @@ int main() {
     int user_choice;
 
     printf("\n+++ Multiprocessor Scheduling Simulator +++\n");
-    printf("   Algorithms available: Lottery & RMS\n");
+    //printf("   Algorithms available: Lottery & RMS\n");
+    printf("   Algorithms: Lottery, RMS, EDF, SJF\n");
     printf("   Number of Processing Cores: %d\n", total_cores);
     printf("   Total tasks initialized: %d\n\n", total_tasks);
 
@@ -59,7 +60,11 @@ int main() {
         printf("Available choices:\n");
         printf(" 1. Run Lottery Scheduler\n");
         printf(" 2. Run Rate Monotonic Scheduler (RMS)\n");
-        printf(" 3. Quit\n> ");
+        
+printf(" 3. EDF\n");
+printf(" 4. SJF\n");
+printf(" 5. Quit\n"); 
+        //printf(" 3. Quit\n> ");
 
         scanf("%d", &user_choice);
 
@@ -70,11 +75,20 @@ int main() {
             case 2:
                 execute_rms_sched(task_list, total_tasks, total_cores);
                 break;
-            case 3:
+                
+                case 3:
+                execute_edf_sched(task_list, total_tasks, total_cores);
+                break;
+        
+                 case 4:
+                 execute_sjf_sched(task_list, total_tasks, total_cores);
+                break;
+                case 5:
                 printf("\nExiting. See you later!\n");
                 exit(0);
+                
             default:
-                printf("\nThat didn't work. Pick 1, 2, or 3.\n");
+                printf("\nThat didn't work. Pick 1, 2,3,4 or 5.\n");
         }
     }
 

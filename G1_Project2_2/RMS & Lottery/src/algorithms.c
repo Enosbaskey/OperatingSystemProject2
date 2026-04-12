@@ -280,3 +280,136 @@ void execute_rms_sched(Task task_arr[], int total_tasks, int core_count) {
 
     show_stats(task_arr, total_tasks);
 }
+//eb
+void execute_edf_sched(Task task_arr[], int total_tasks, int core_count) {
+    printf("\n--- EDF Scheduling ---\n");
+
+    Core cores[core_count];
+    for(int i=0;i<core_count;i++){
+        cores[i].active_task_id = -1;
+    }
+
+    int time = 0, done = 0;
+
+    while(done < total_tasks){
+
+        // 🔥 reset cores every cycle (important fix)
+        for(int c=0;c<core_count;c++){
+            cores[c].active_task_id = -1;
+        }
+
+        // 🔥 pick best tasks (READY or RUNNING)
+        for(int c=0;c<core_count;c++){
+            int best = -1;
+            int earliest_deadline = __INT_MAX__;
+
+            for(int i=0;i<total_tasks;i++){
+                if((task_arr[i].status == STATUS_READY || task_arr[i].status == STATUS_RUN) &&
+                   task_arr[i].time_arrival <= time &&
+                   task_arr[i].time_rem > 0){
+
+                    if(task_arr[i].interval < earliest_deadline){
+                        earliest_deadline = task_arr[i].interval;
+                        best = i;
+                    }
+                }
+            }
+
+            if(best != -1){
+                cores[c].active_task_id = best;
+                task_arr[best].status = STATUS_RUN;
+
+                if(task_arr[best].time_start == -1)
+                    task_arr[best].time_start = time;
+            }
+        }
+
+        display_timeline(time, cores, core_count, task_arr);
+
+        // 🔥 execute
+        for(int c=0;c<core_count;c++){
+            if(cores[c].active_task_id == -1) continue;
+
+            int t = cores[c].active_task_id;
+            task_arr[t].time_rem--;
+
+            if(task_arr[t].time_rem == 0){
+                task_arr[t].status = STATUS_DONE;
+                task_arr[t].time_done = time+1;
+                done++;
+            } else {
+                task_arr[t].status = STATUS_READY; // put back
+            }
+        }
+
+        time++;
+
+        // 🔥 SAFETY BREAK (avoid infinite loop)
+        if(time > 10000){
+            printf("ERROR: Infinite loop detected\n");
+            break;
+        }
+    }
+
+    show_stats(task_arr, total_tasks);
+}
+
+
+void execute_sjf_sched(Task task_arr[], int total_tasks, int core_count) {
+    printf("\n--- SJF Scheduling ---\n");
+
+    Core cores[core_count];
+    for(int i=0;i<core_count;i++){
+        cores[i].active_task_id = -1;
+    }
+
+    int time = 0, done = 0;
+
+    while(done < total_tasks){
+
+        for(int c=0;c<core_count;c++){
+            if(cores[c].active_task_id != -1) continue;
+
+            int best = -1;
+            int shortest = __INT_MAX__;
+
+            for(int i=0;i<total_tasks;i++){
+                if(task_arr[i].status == STATUS_READY &&
+                   task_arr[i].time_arrival <= time &&
+                   task_arr[i].time_burst < shortest){
+                    
+                    shortest = task_arr[i].time_burst;
+                    best = i;
+                }
+            }
+
+            if(best != -1){
+                cores[c].active_task_id = best;
+                task_arr[best].status = STATUS_RUN;
+
+                if(task_arr[best].time_start == -1)
+                    task_arr[best].time_start = time;
+            }
+        }
+
+        display_timeline(time, cores, core_count, task_arr);
+
+        for(int c=0;c<core_count;c++){
+            if(cores[c].active_task_id == -1) continue;
+
+            int t = cores[c].active_task_id;
+            task_arr[t].time_rem--;
+
+            if(task_arr[t].time_rem == 0){
+                task_arr[t].status = STATUS_DONE;
+                task_arr[t].time_done = time+1;
+                cores[c].active_task_id = -1;
+                done++;
+            }
+        }
+
+        time++;
+    }
+
+    show_stats(task_arr, total_tasks);
+}
